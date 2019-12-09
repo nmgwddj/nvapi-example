@@ -26,6 +26,8 @@ bool NvController::Initialize()
 	NvAPI_GetAssociatedNvidiaDisplayName = (NvAPI_GetAssociatedNvidiaDisplayName_t)(*NvAPI_QueryInterface)(_NvAPI_GetAssociatedNvidiaDisplayName);
 	NvAPI_GetDVCInfoEx = (NvAPI_GetDVCInfoEx_t)(*NvAPI_QueryInterface)(_NvAPI_GetDVCInfoEx);
 	NvAPI_SetDVCLevelEx = (NvAPI_SetDVCLevelEx_t)(*NvAPI_QueryInterface)(_NvAPI_SetDVCLevelEx);
+	NvAPI_GetHUEInfo = (NvAPI_GetHUEInfo_t)(*NvAPI_QueryInterface)(_NvAPI_GetHUEInfo);
+	NvAPI_SetHUEAngle = (NvAPI_SetHUEAngle_t)(*NvAPI_QueryInterface)(_NvAPI_SetHUEAngle);
 
 	_NvAPI_Status status = (_NvAPI_Status)(*NvAPI_Initialize)();
 	if (status != NVAPI_OK)
@@ -113,7 +115,7 @@ bool NvController::SetDVCLevelEx(int nDisp, int level)
 
 NV_DISPLAY_DVC_INFO_EX NvController::GetDvcInfoEx(int nDisp)
 {
-	NV_DISPLAY_DVC_INFO_EX info;
+	NV_DISPLAY_DVC_INFO_EX info = { 0 };
 
 	int nvDispHandle;
 	if (EnumNvidiaDisplayHandle(nDisp, &nvDispHandle) != 0)
@@ -123,5 +125,36 @@ NV_DISPLAY_DVC_INFO_EX NvController::GetDvcInfoEx(int nDisp)
 	}
 
 	return info;
+}
+
+NV_DISPLAY_HUE_INFO NvController::GetHUEInfo(int nDisp)
+{
+	NV_DISPLAY_HUE_INFO info = { 0 };
+
+	int nvDispHandle;
+	if (EnumNvidiaDisplayHandle(nDisp, &nvDispHandle) != 0)
+	{
+		info.version = sizeof(NV_DISPLAY_HUE_INFO) | 0x10000;
+		(*NvAPI_GetHUEInfo)(nvDispHandle, 0, &info);
+	}
+
+	return info;
+}
+
+bool NvController::SetHUEAngle(int nDisp, int level)
+{
+	int NvDispHandle;
+	if (EnumNvidiaDisplayHandle(nDisp, &NvDispHandle) != 0)
+	{
+		_NvAPI_Status status = (_NvAPI_Status)(*NvAPI_SetHUEAngle)(NvDispHandle, 0, level);
+		if (status != NVAPI_OK)
+		{
+			return false;
+		}
+
+		return true;
+	}
+
+	return false;
 }
 
